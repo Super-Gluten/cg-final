@@ -1,10 +1,17 @@
 # cg-final
 2025年中山大学计算机图形学作业
 
-📚 Ready to Development
+## 📚 Ready to Development
 建议首先阅读并完善 [docs](/docs) 中的文档
 
 关于使用 GitHub 合作的注意事项，请阅读 [Git_Guide.md](/docs/Git_Guide.md) 和 [PR_WorkFlow.md](/docs/PR_WorkFlow.md)
+
+## ⚙️ Environment
+
+本项目针对中山大学计算机图形学作业的开发需求，基于 CMake 实现了 OpenGL+ImGui+GLFW+Glad+GLM 的自动配置环境
+项目根目录已预设完成 CMakeLists.txt 配置，无需手动处理库的链接与路径配置，仅需在对应 IDE 中完成简单初始化即可开发。
+已兼容的 IDE 确定有 vscode / visual studio
+
 
 ## 🛠️ Installation
 
@@ -15,6 +22,11 @@ git clone https://github.com/Super-Gluten/cg-final.git
 ```
 
 关于环境配置的详细信息和配置步骤，请阅读 [Install.md](/docs/Install.md)
+
+## 🔤 Encoding Specification
+> 重要：为避免中文乱码、编译异常、协作冲突等问题，本项目**强制要求所有文件使用 UTF-8 编码格式**，禁止使用 GBK（包括 GB2312、GB18030 等衍生中文编码）。
+关于解决文件编码的问题，请阅读 [Encoding_Problem_Solutions.md](/docs/Encoding_Problem_Solutions.md)
+
 
 ## 📂 概览
 
