@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-project(MyGLFWImGuiProject)
+project(CG_Final_Project)
 # 设置 C++ 标准为 C++17
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -97,7 +97,7 @@ file(GLOB_RECURSE PROJECT_SOURCES
 # 创建可执行文件
 add_executable(${PROJECT_NAME} 
     test/enviroment.cpp
-    ${PROJECT_SOURCES} 
+    # ${PROJECT_SOURCES} 
     ${IMGUI_SOURCES}
 )
 
@@ -113,8 +113,8 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${imgui_SOURCE_DIR}
     ${imgui_SOURCE_DIR}/backends
     ${glm_SOURCE_DIR}
+    ${PROJECT_INCLUDE_DIRS}    
     $<TARGET_PROPERTY:glad_gl_core_33,INTERFACE_INCLUDE_DIRECTORIES>
-    ${PROJECT_INCLUDE_DIRS}
 )
 
 # 链接库
@@ -123,8 +123,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     glfw        # GLFW库
     glu32.lib
     opengl32.lib
+    glm::glm    # GLM 库
     glad_gl_core_33
-    glm::glm
 )
 
 # 设置编译定义
