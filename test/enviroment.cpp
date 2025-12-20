@@ -1,4 +1,11 @@
-#include <glad/gl.h>
+// #include <glad/gl.h>
+
+// OpenGL 固定管线 API
+#ifdef _WIN32
+#include <windows.h>
+#endif
+#include <GL/gl.h>
+#include <GL/glu.h>
 #include <GLFW/glfw3.h>
 
 // ImGui
@@ -37,15 +44,15 @@ int main() {
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);
 
-    // 初始化Glad（官方2.x接口）
-    int gladVer = gladLoadGL(glfwGetProcAddress);
-    if (gladVer == 0) {
-        std::cerr << "Failed to load Glad!" << std::endl;
-        glfwDestroyWindow(window);
-        glfwTerminate();
-        return -1;
-    }
-    std::cout << "Loaded OpenGL " << GLAD_VERSION_MAJOR(gladVer) << "." << GLAD_VERSION_MINOR(gladVer) << std::endl;
+    // // 初始化Glad（官方2.x接口）
+    // int gladVer = gladLoadGL(glfwGetProcAddress);
+    // if (gladVer == 0) {
+    //     std::cerr << "Failed to load Glad!" << std::endl;
+    //     glfwDestroyWindow(window);
+    //     glfwTerminate();
+    //     return -1;
+    // }
+    // std::cout << "Loaded OpenGL " << GLAD_VERSION_MAJOR(gladVer) << "." << GLAD_VERSION_MINOR(gladVer) << std::endl;
 
     // 初始化ImGui
     IMGUI_CHECKVERSION();

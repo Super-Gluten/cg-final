@@ -61,19 +61,19 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(glm)
 
-FetchContent_Declare(
-    glad
-    URL https://github.com/Dav1dde/glad/archive/refs/tags/v2.0.6.zip
-    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-)
-FetchContent_MakeAvailable(glad)
+# FetchContent_Declare(
+#     glad
+#     URL https://github.com/Dav1dde/glad/archive/refs/tags/v2.0.6.zip
+#     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+# )
+# FetchContent_MakeAvailable(glad)
 
-# 使用 Glad 官方的 CMake 接口
-add_subdirectory("${glad_SOURCE_DIR}/cmake" glad_cmake)
-glad_add_library(glad_gl_core_33 
-    REPRODUCIBLE 
-    API gl:core=3.3
-)
+# # 使用 Glad 官方的 CMake 接口
+# add_subdirectory("${glad_SOURCE_DIR}/cmake" glad_cmake)
+# glad_add_library(glad_gl_core_33 
+#     REPRODUCIBLE 
+#     API gl:core=3.3
+# )
 
 # ImGui源文件
 set(IMGUI_SOURCES
@@ -114,7 +114,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${imgui_SOURCE_DIR}/backends
     ${glm_SOURCE_DIR}
     ${PROJECT_INCLUDE_DIRS}    
-    $<TARGET_PROPERTY:glad_gl_core_33,INTERFACE_INCLUDE_DIRECTORIES>
+    # $<TARGET_PROPERTY:glad_gl_core_33,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
 # 链接库
@@ -124,12 +124,13 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     glu32.lib
     opengl32.lib
     glm::glm    # GLM 库
-    glad_gl_core_33
+    # glad_gl_core_33
 )
 
 # 设置编译定义
 target_compile_definitions(${PROJECT_NAME} PRIVATE
-    IMGUI_IMPL_OPENGL_LOADER_GLAD
+    IMGUI_IMPL_OPENGL_LOADER_GLFW
+    # IMGUI_IMPL_OPENGL_LOADER_GLAD
 )
 
 # 复制 DLL 文件

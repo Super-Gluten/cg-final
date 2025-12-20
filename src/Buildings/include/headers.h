@@ -1,8 +1,8 @@
 #ifndef HEADERS_H
 #define HEADERS_H
 
-// GLFW + ImGui + Glad + Glm
-#include <glad/gl.h>
+// GLFW + ImGui + Glm
+// #include <glad/gl.h>
 #include <GLFW/glfw3.h>
 
 #include <imgui.h>
@@ -11,6 +11,14 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+// OpenGL 固定管线 API
+#ifdef _WIN32
+#include <windows.h>
+#endif
+#include <GL/gl.h>
+#include <GL/glu.h>
 
 // 原有标准库文件
 #include <vector>
