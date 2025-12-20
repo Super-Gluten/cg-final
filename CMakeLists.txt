@@ -94,18 +94,18 @@ file(GLOB_RECURSE PROJECT_SOURCES
     ${CMAKE_SOURCE_DIR}/src/*.c
 )
 
-# 递归查找 src 目录下的所有头文件
-file(GLOB_RECURSE PROJECT_HEADERS
-    ${CMAKE_SOURCE_DIR}/src/*.h
-    ${CMAKE_SOURCE_DIR}/src/*.hpp
-    ${CMAKE_SOURCE_DIR}/src/*.hh
-)
-
 # 创建可执行文件
 add_executable(${PROJECT_NAME} 
     test/enviroment.cpp
     ${PROJECT_SOURCES} 
     ${IMGUI_SOURCES}
+)
+
+# 获取 src 下所有目录头文件
+set(PROJECT_INCLUDE_DIRS
+    ${CMAKE_SOURCE_DIR}/src/Buildings/include
+    ${CMAKE_SOURCE_DIR}/src/Light_System/include
+    ${CMAKE_SOURCE_DIR}/src/Scene_Component/include
 )
 
 # 包含目录：添加OpenGL自动识别的头文件路径
@@ -114,6 +114,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${imgui_SOURCE_DIR}/backends
     ${glm_SOURCE_DIR}
     $<TARGET_PROPERTY:glad_gl_core_33,INTERFACE_INCLUDE_DIRECTORIES>
+    ${PROJECT_INCLUDE_DIRS}
 )
 
 # 链接库
