@@ -5,18 +5,25 @@
 #include "weather.h" 
 
 // ===================== 全局常量定义 =====================
+// 单次调整角度步长
 const float ANGLE_STEP_WIDTH = 0.05f;
-
+// 单次调整相机距离步长
+const float CRMERA_DISTANCE_STEP_WIDTH = 50.0f;
+// 单词调整相机偏移步长
+const float CRMERA_OFFSET_STEP_WIDTH = 25.0f;
 // ===================== 全局变量定义 =====================
-// 窗口指针
+// 窗口指针及窗口大小
 GLFWwindow* window;
+int window_width = 1200, window_height = 800;
 
 // ImGui 状态变量
 bool showWeatherControls = true;
 bool showDebugInfo = true;
-int window_width = 1200, window_height = 800;
+
+// 相机参数相关
 float rotate_x = 0.0f, rotate_y = 0.0f;
 float camera_distance = 1500.0f;
+float camera_offset[3] = {0.0f, 500.0f, 0.0f};
 
 // 时间变量
 double lastTime = 0.0;
@@ -45,6 +52,19 @@ void initLightSystem() {
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     // ImGui处理键盘输入
     ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
+
+    // 获取ImGui的IO状态
+    ImGuiIO& io = ImGui::GetIO();
+    
+    // 如果ImGui想要捕获键盘事件，就跳过我们的处理
+    if (io.WantCaptureKeyboard) {
+        return;
+    }
+    
+    // 安全检查：确保键值有效
+    if (key < 0) {
+        return;  // 忽略负值键（如GLFW_KEY_UNKNOWN）
+    }
     
     if (action == GLFW_PRESS) {
         keyBuffer[key] = true;
@@ -56,16 +76,34 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
     if (action == GLFW_PRESS || action == GLFW_REPEAT) {
         switch (key) {
             case GLFW_KEY_UP:
-                rotate_x += 1.0f;
+                if (rotate_x <= 1.55f) {
+                    rotate_x += ANGLE_STEP_WIDTH;
+                }
                 break;
             case GLFW_KEY_DOWN:
-                rotate_x -= 1.0f;
+                if (rotate_x >= -1.55f) {
+                    rotate_x -= ANGLE_STEP_WIDTH;
+                }
                 break;
             case GLFW_KEY_RIGHT:
-                rotate_y += 1.0f;
+                if (rotate_y <= 1.55f) {
+                    rotate_y += ANGLE_STEP_WIDTH;
+                }
                 break;
             case GLFW_KEY_LEFT:
-                rotate_y -= 1.0f;
+                if (rotate_y >= -1.55f) {
+                    rotate_y -= ANGLE_STEP_WIDTH;
+                }
+                break;
+            case GLFW_KEY_F1:
+                // F1键切换调试信息
+                showDebugInfo = !showDebugInfo;
+                std::cout << "调试面板: " << (showDebugInfo ? "显示" : "隐藏") << std::endl;
+                break;
+            case GLFW_KEY_F2:
+                // F2键切换天气面板
+                showWeatherControls = !showWeatherControls;
+                std::cout << "天气面板: " << (showWeatherControls ? "显示" : "隐藏") << std::endl;
                 break;
         }
     }
@@ -103,9 +141,6 @@ bool initProject() {
     glfwMakeContextCurrent(window);
     // 设置窗口调整函数
     glfwSetFramebufferSizeCallback(window, framebufferSizeCallback); 
-
-    // 设置键盘处理函数
-    glfwSetKeyCallback(window, keyCallback);
     glfwSwapInterval(1); // 垂直同步
 
     // 2. 初始化 ImGui
@@ -213,9 +248,22 @@ void renderDebugPanel() {
         ImGuiWindowFlags_AlwaysAutoResize
     );
 
+    ImGui::Text("相机控制");
+    ImGui::DragFloat("相机距离", &camera_distance, CRMERA_DISTANCE_STEP_WIDTH, 500.0f, 5000.0f);
+    ImGui::DragFloat("相机 X 轴偏移", &camera_offset[0], CRMERA_OFFSET_STEP_WIDTH, -2000.0f, 2000.0f);
+    ImGui::DragFloat("相机 Y 轴偏移", &camera_offset[1], CRMERA_OFFSET_STEP_WIDTH, -2000.0f, 2000.0f);
+    ImGui::DragFloat("相机 Z 轴偏移", &camera_offset[2], CRMERA_OFFSET_STEP_WIDTH, -2000.0f, 2000.0f);
+
+    if (ImGui::Button("重置相机位置")) {
+        camera_offset[0] = 0.0f;
+        camera_offset[1] = 500.0f;
+        camera_offset[2] = 0.0f;
+    }
+
+    ImGui::Separator();
     ImGui::Text("旋转控制");
-    ImGui::DragFloat("rotate_x", &rotate_x, ANGLE_STEP_WIDTH, -1.57f, 1.57f);
-    ImGui::DragFloat("rotate_y", &rotate_y, ANGLE_STEP_WIDTH, -1.57f, 1.57f);
+    ImGui::DragFloat("X 轴旋转角度", &rotate_x, ANGLE_STEP_WIDTH, -1.57f, 1.57f);
+    ImGui::DragFloat("Y 轴旋转角度", &rotate_y, ANGLE_STEP_WIDTH, -1.57f, 1.57f);
 
     if (ImGui::Button("重置旋转")) {
         rotate_x = 0.0f;
@@ -250,9 +298,9 @@ void renderScene() {
     );
 
     glm::vec3 camera_pos = glm::vec3(
-        camera_distance * sin(rotate_y) * cos(rotate_x),
-        camera_distance * sin(rotate_x) + 500.0f,
-        camera_distance * cos(rotate_y) * cos(rotate_x)
+        camera_distance * sin(rotate_y) * cos(rotate_x) + camera_offset[0], 
+        camera_distance * sin(rotate_x) + camera_offset[1],
+        camera_distance * cos(rotate_y) * cos(rotate_x) + camera_offset[2]
     );
 
     glm::mat4 view = glm::lookAt(
