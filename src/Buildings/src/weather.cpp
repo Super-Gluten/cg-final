@@ -212,7 +212,7 @@ void WeatherSystem::renderRainAccumulation() {
 
     // 绘制雨滴
     if (currentWeather == WEATHER_RAINING
-         || (!currentWeather == WEATHER_SNOWING && particles.size() > 0)) 
+         || (currentWeather != WEATHER_SNOWING && particles.size() > 0)) 
     {
         glLineWidth(1.0f);
         glBegin(GL_LINES);
@@ -257,7 +257,7 @@ void WeatherSystem::renderRainAccumulation() {
 
     // 绘制雪花
     if (currentWeather == WEATHER_SNOWING 
-        || (!currentWeather == WEATHER_RAINING && particles.size() > 0)) 
+        || (currentWeather != WEATHER_RAINING && particles.size() > 0)) 
     {
         glPointSize(4.0f);  // 雪花使用更大的点
         glBegin(GL_POINTS);

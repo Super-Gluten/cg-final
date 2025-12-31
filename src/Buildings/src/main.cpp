@@ -11,6 +11,8 @@ const float ANGLE_STEP_WIDTH = 0.05f;
 const float CRMERA_DISTANCE_STEP_WIDTH = 50.0f;
 // 单词调整相机偏移步长
 const float CRMERA_OFFSET_STEP_WIDTH = 25.0f;
+// 定义窗口的 FPS
+const int FRAMES_PRE_SECOND = 60;
 // ===================== 全局变量定义 =====================
 // 窗口指针及窗口大小
 GLFWwindow* window;
@@ -360,7 +362,11 @@ int main() {
         // 计算时间增量 
         auto currentTime = glfwGetTime();
         auto deltaTime = currentTime - lastTime;
-        lastTime = currentTime;
+
+        if (deltaTime > 1.0 / FRAMES_PRE_SECOND) {
+            weatherSystem.update(deltaTime);
+            lastTime = currentTime;
+        }
 
         // 事件处理
         glfwPollEvents();
