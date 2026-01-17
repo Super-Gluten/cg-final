@@ -8,7 +8,7 @@
 
 ## ⚙️ Environment
 
-- 本项目针对中山大学计算机图形学作业的开发需求，基于 CMake 实现了 OpenGL+ImGui+GLFW+GLM 的自动配置环境。
+- 本项目针对中山大学计算机图形学作业的开发需求，基于 CMake 实现了 OpenGL+ImGui+GLFW+GLM+Glad 的自动配置环境。
 - 项目根目录已预设完成 CMakeLists.txt 配置，无需手动处理库的链接与路径配置，仅需在对应 IDE 中完成简单初始化即可开发。
 
 已兼容的 IDE 确定有 vscode / visual studio，已兼容的 编译器 确定有 MinGW / MSVC
