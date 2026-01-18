@@ -1,428 +1,384 @@
 #include "weather.h"
 #include "geometry.h"
+#include "terrain.h" 
+#include "lighting.h" 
+#include "texture.h"
+#include <cmath>
+#include <cstdlib>
+#include <ctime>
+#include <iostream>
+#include <algorithm> 
+extern LightingSystem lightingSystem;
 
-// 全局天气系统实例
 WeatherSystem weatherSystem;
 
-// 构造函数
-WeatherSystem::WeatherSystem() : currentWeather(WEATHER_SUNNY), snowAccumulation(0.0f) {
+WeatherSystem::WeatherSystem() : isRaining(false), isSnowing(false), snowAccumulation(0.0f) {
     srand(static_cast<unsigned>(time(0)));
 }
+void WeatherSystem::drawSnowOnHouse() {}
 
-// 析构函数
 WeatherSystem::~WeatherSystem() {
     particles.clear();
+    smokeParticles.clear();
 }
 
-// 初始化系统
 void WeatherSystem::init(int maxParticles) {
+    if (maxParticles < 50000) maxParticles = 50000;
     particles.reserve(maxParticles);
-    currentWeather = WEATHER_SUNNY;
+    isRaining = false;
+    isSnowing = false;
     snowAccumulation = 0.0f;
+    smokeParticles.clear();
 }
 
 // 创建新的雨滴粒子
 void WeatherSystem::createRaindrop() {
-    if (particles.size() >= particles.capacity()) {
-        return;
-    }
+    if (particles.size() >= particles.capacity()) return;
 
     WeatherParticle p;
-    p.x = static_cast<float>(rand() % 800);
-    p.y = 500.0f + static_cast<float>(rand() % 300);
-    p.z = static_cast<float>(rand() % 800);
+    //生成范围：-6000 ~ 6000
+    p.x = (rand() % 12000) - 6000.0f;
+    p.y = 800.0f;
+    p.z = (rand() % 12000) - 6000.0f;
 
     p.vx = 0.0f;
-    p.vy = -300.0f - static_cast<float>(rand() % 100);
+    p.vy = -300.0f - static_cast<float>(rand() % 150);
     p.vz = 0.0f;
-
-    p.life = 2.0f;
+    p.life = 3.0f;
     p.size = 1.5f + static_cast<float>(rand() % 5) / 10.0f;
     p.active = true;
     p.type = 0;
-
     particles.push_back(p);
 }
 
-// 创建新的雪花粒子 - 修复：确保雪花能落到地面
+// 创建新的雪花粒子
 void WeatherSystem::createSnowflake() {
-    if (particles.size() >= particles.capacity()) {
-        return;
-    }
+    if (particles.size() >= particles.capacity()) return;
 
     WeatherParticle p;
-    // 雪花在场景上方更宽的范围生成
-    p.x = static_cast<float>(rand() % 1200) - 200.0f;  // x: -200 到 1000
-    p.y = 600.0f + static_cast<float>(rand() % 300);   // 提高起始高度：800-1400
-    p.z = static_cast<float>(rand() % 1200) - 200.0f;  // z: -200 到 1000
+    //生成范围：-6000 ~ 6000
+    p.x = (rand() % 12000) - 6000.0f;
+    p.y = 800.0f + static_cast<float>(rand() % 300);
+    p.z = (rand() % 12000) - 6000.0f;
 
-    // 雪花缓慢飘落，有轻微的水平飘动
-    p.vx = (static_cast<float>(rand() % 100) - 50.0f) * 0.3f;  // 减小水平速度
-    p.vy = -80.0f - static_cast<float>(rand() % 30);           // 减慢下落速度
-    p.vz = (static_cast<float>(rand() % 100) - 50.0f) * 0.3f;  // 减小水平速度
-
-    p.life = 20.0f;  // 大大延长雪花生命周期，确保能落到地面
-    p.size = 2.5f + static_cast<float>(rand() % 20) / 10.0f;  // 雪花大小：2.5-4.5
+    p.vx = (static_cast<float>(rand() % 100) - 50.0f) * 0.5f;
+    p.vy = -60.0f - static_cast<float>(rand() % 30);
+    p.vz = (static_cast<float>(rand() % 100) - 50.0f) * 0.5f;
+    p.life = 10.0f;
+    p.size = 3.0f + static_cast<float>(rand() % 20) / 10.0f;
     p.active = true;
-    p.type = 2;  // 雪花类型
-
+    p.type = 2;
     particles.push_back(p);
 }
 
-// 创建水花粒子
 void WeatherSystem::createSplash(float x, float y, float z) {
-    int splashCount = 6 + rand() % 4;
-
+    int splashCount = 8 + rand() % 8;
     for (int i = 0; i < splashCount; i++) {
-        if (particles.size() >= particles.capacity()) {
-            break;
-        }
-
+        if (particles.size() >= particles.capacity()) break;
         WeatherParticle p;
         p.x = x + (static_cast<float>(rand() % 20) - 10.0f);
-        p.y = y + 0.3f;
+        p.y = y + 0.5f;
         p.z = z + (static_cast<float>(rand() % 20) - 10.0f);
-
-        float angle = static_cast<float>(rand() % 360) * 3.14159f / 180.0f;
-        float speed = 8.0f + static_cast<float>(rand() % 15);
-
+        float angle = static_cast<float>(rand() % 360);
+        float speed = 10.0f + static_cast<float>(rand() % 20);
         p.vx = cos(angle) * speed;
-        p.vy = 15.0f + static_cast<float>(rand() % 20);
+        p.vy = 10.0f + static_cast<float>(rand() % 20);
         p.vz = sin(angle) * speed;
-
-        p.life = 0.5f + static_cast<float>(rand() % 20) / 100.0f;
-        p.size = 1.8f + static_cast<float>(rand() % 8) / 10.0f;
+        p.life = 0.4f;
+        p.size = 1.0f;
         p.active = true;
         p.type = 1;
-
         particles.push_back(p);
     }
 }
 
-// 更新粒子系统
 void WeatherSystem::update(float deltaTime) {
-    // 更新积雪厚度
-    if (currentWeather == WEATHER_SNOWING) {
-        // 缓慢增加积雪厚度，最大到10个单位
-        snowAccumulation += deltaTime * 0.5f;
+    updateSmoke(deltaTime);
+    if (isSnowing) {
+        snowAccumulation += deltaTime * 0.2f;
         if (snowAccumulation > 10.0f) snowAccumulation = 10.0f;
     }
     else if (snowAccumulation > 0.0f) {
-        // 不下雪时积雪缓慢融化
         snowAccumulation -= deltaTime * 0.1f;
         if (snowAccumulation < 0.0f) snowAccumulation = 0.0f;
     }
 
-    // 如果正在下雨，创建新的雨滴
-    if (currentWeather == WEATHER_RAINING) {
+    if (isRaining) {
         static float rainTimer = 0.0f;
         rainTimer += deltaTime;
-
-        if (rainTimer > 0.002f) {
-            for (int i = 0; i < 3; i++) {
-                createRaindrop();
-            }
+        if (rainTimer > 0.0005f) {
+            for (int i = 0; i < 200; i++) createRaindrop();
             rainTimer = 0.0f;
         }
     }
 
-    // 如果正在下雪，创建新的雪花
-    if (currentWeather == WEATHER_SNOWING) {
+    if (isSnowing) {
         static float snowTimer = 0.0f;
         snowTimer += deltaTime;
-
-        if (snowTimer > 0.1f) {  // 雪花生成频率较低
-            for (int i = 0; i < 2; i++) {
-                createSnowflake();
-            }
+        if (snowTimer > 0.05f) {
+            for (int i = 0; i < 50; i++) createSnowflake();
             snowTimer = 0.0f;
         }
     }
 
-    // 更新所有粒子
     for (auto& p : particles) {
         if (!p.active) continue;
-
-        // 更新位置
         p.x += p.vx * deltaTime;
         p.y += p.vy * deltaTime;
         p.z += p.vz * deltaTime;
-
-        // 更新生命周期
         p.life -= deltaTime;
+        if (p.type == 1) p.vy -= 120.0f * deltaTime;
 
-        // 重力影响
-        if (p.type == 1) {  // 水花粒子
-            p.vy -= 120.0f * deltaTime;
-        }
-
-        // 雪花轻微旋转飘动效果
-        if (p.type == 2) {
-            p.vx += (static_cast<float>(rand() % 100) - 50.0f) * 0.01f;
-            p.vz += (static_cast<float>(rand() % 100) - 50.0f) * 0.01f;
-        }
-
-        // 检查雨滴是否落到地面
-        if (p.type == 0 && p.y <= 15.0f) {
+        if (p.type == 0 && p.y <= 10.0f) {
             p.active = false;
-
-            if (rand() % 100 < 70) {
-                createSplash(p.x, 15.0f, p.z);
+            if (abs(p.x) < 800 && abs(p.z) < 800 && rand() % 100 < 50) {
+                createSplash(p.x, 10.0f, p.z);
             }
         }
-
-        // 检查雪花是否落到地面或屋顶
-        if (p.type == 2 && p.y <= 15.0f) {
-            p.active = false;
-        }
-
-        // 检查粒子是否死亡
-        if (p.life <= 0.0f || p.y < -50.0f) {
-            p.active = false;
-        }
-
-        // 限制在场景范围内
-        if (p.x < -200 || p.x > 1000 || p.z < -200 || p.z > 1000) {
-            p.active = false;
-        }
+        if (p.type == 2 && p.y <= 10.0f) p.active = false;
+        if (p.life <= 0.0f || p.y < -50.0f) p.active = false;
+        if (p.x < -2500 || p.x > 2500 || p.z < -2500 || p.z > 2500) p.active = false;
     }
 
-    // 移除不活跃的粒子
-    particles.erase(
-        std::remove_if(particles.begin(), particles.end(),
-            [](const WeatherParticle& p) { return !p.active; }),
-        particles.end()
-    );
+    particles.erase(std::remove_if(particles.begin(), particles.end(),
+        [](const WeatherParticle& p) { return !p.active; }), particles.end());
 }
 
-// 绘制粒子
-void WeatherSystem::renderRainAccumulation() {
-    if ((currentWeather == WEATHER_SUNNY) && particles.empty()) {
-        return;
+void WeatherSystem::updateSmoke(float deltaTime) {
+    static float smokeTimer = 0.0f;
+    smokeTimer += deltaTime;
+
+    if (smokeTimer > 0.05f) {
+        smokeTimer = 0.0f;
+        if (smokeParticles.size() < 300) {
+            SmokeParticle p;
+            float chimneyX = 290;
+            float chimneyZ = 20;
+
+            p.x = chimneyX + (rand() % 10 - 5) / 2.0f;
+            p.z = chimneyZ + (rand() % 10 - 5) / 2.0f;
+            p.y = 185;
+
+            p.vy = 15.0f + (rand() % 50) / 10.0f;
+            p.size = 2.0f;
+            p.life = 2.5f;
+            p.offsetX = (rand() % 20 - 10) / 5.0f;
+            p.offsetZ = (rand() % 20 - 10) / 5.0f;
+            smokeParticles.push_back(p);
+        }
     }
 
-    // 保存当前矩阵状态
-    glPushMatrix();
+    for (auto& p : smokeParticles) {
+        p.y += p.vy * deltaTime;
+        p.x += p.offsetX * deltaTime;
+        p.z += p.offsetZ * deltaTime;
+        p.size += 8.0f * deltaTime;
+        p.life -= 0.4f * deltaTime;
+    }
+    smokeParticles.erase(std::remove_if(smokeParticles.begin(), smokeParticles.end(),
+        [](const SmokeParticle& p) { return p.life <= 0.0f; }), smokeParticles.end());
+}
 
+void WeatherSystem::drawSmoke() {
     glDisable(GL_LIGHTING);
-    glDisable(GL_TEXTURE_2D);
+    glDepthMask(GL_FALSE);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDepthMask(GL_FALSE);
 
-    // 绘制雨滴
-    if (currentWeather == WEATHER_RAINING
-         || (currentWeather != WEATHER_SNOWING && particles.size() > 0)) 
-    {
-        glLineWidth(1.0f);
-        glBegin(GL_LINES);
-        for (const auto& p : particles) {
-            if (!p.active || p.type != 0) continue;
-
-            float alpha = p.life;
-            if (alpha > 1.0f) alpha = 1.0f;
-            if (alpha < 0.1f) alpha = 0.1f;
-
-            glColor4f(123, 104, 238, alpha * 0.8f);
-
-            float startX = p.x;
-            float startY = p.y;
-            float startZ = p.z;
-
-            float endX = p.x;
-            float endY = p.y - p.size * 25.0f;
-            float endZ = p.z;
-
-            glVertex3f(startX, startY, startZ);
-            glVertex3f(endX, endY, endZ);
-        }
-        glEnd();
+    for (const auto& p : smokeParticles) {
+        glPushMatrix();
+        glTranslatef(p.x, p.y, p.z);
+        glColor4f(0.9f, 0.9f, 0.9f, p.life * 0.01f);
+        glutSolidSphere(p.size, 8, 8);
+        glPopMatrix();
     }
+    glDepthMask(GL_TRUE);
+    glEnable(GL_LIGHTING);
+}
 
-    // 绘制水花
-    glPointSize(2.5f);
+
+void WeatherSystem::draw() {
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDisable(GL_LIGHTING);
+    glDisable(GL_TEXTURE_2D);
+
+    // 1. 绘制雨滴
+    glLineWidth(1.0f);
+    glBegin(GL_LINES);
+    for (const auto& p : particles) {
+        if (!p.active || p.type != 0) continue;
+        glColor4f(0.7f, 0.8f, 1.0f, 0.6f);
+        glVertex3f(p.x, p.y, p.z);
+        glVertex3f(p.x + p.vx * 0.05f, p.y + p.vy * 0.05f, p.z + p.vz * 0.05f);
+    }
+    glEnd();
+
+    // 2. 绘制雪花（点）
+    glPointSize(3.0f);
     glBegin(GL_POINTS);
     for (const auto& p : particles) {
-        if (!p.active || p.type != 1) continue;
-
-        float alpha = p.life;
-        if (alpha > 1.0f) alpha = 1.0f;
-        if (alpha < 0.05f) alpha = 0.05f;
-
-        float colorAlpha = alpha * 0.4f;
-        glColor4f(0.9f, 0.95f, 1.0f, colorAlpha);
+        if (!p.active || p.type != 2) continue;
+        glColor4f(1.0f, 1.0f, 1.0f, 0.9f);
         glVertex3f(p.x, p.y, p.z);
     }
     glEnd();
 
-    // 绘制雪花
-    if (currentWeather == WEATHER_SNOWING 
-        || (currentWeather != WEATHER_RAINING && particles.size() > 0)) 
-    {
-        glPointSize(4.0f);  // 雪花使用更大的点
-        glBegin(GL_POINTS);
-        for (const auto& p : particles) {
-            if (!p.active || p.type != 2) continue;
-
-            float alpha = p.life;
-            if (alpha > 1.0f) alpha = 1.0f;
-            if (alpha < 0.2f) alpha = 0.2f;
-
-            // 雪花颜色：纯白色带轻微透明度
-            glColor4f(1.0f, 1.0f, 1.0f, alpha * 0.9f);
-            glVertex3f(p.x, p.y, p.z);
-        }
-        glEnd();
-
-        // 为较大的雪花添加星形效果
-        glLineWidth(0.8f);
-        glBegin(GL_LINES);
-        for (const auto& p : particles) {
-            if (!p.active || p.type != 2) continue;
-
-            if (p.size > 3.5f) {
-                float alpha = p.life * 0.7f;
-                glColor4f(1.0f, 1.0f, 1.0f, alpha);
-
-                // 绘制雪花的星形图案
-                for (int i = 0; i < 6; i++) {
-                    float angle = static_cast<float>(i) * 3.14159f / 3.0f;
-                    float length = p.size * 1.5f;
-
-                    float endX = p.x + cos(angle) * length;
-                    float endY = p.y;
-                    float endZ = p.z + sin(angle) * length;
-
-                    glVertex3f(p.x, p.y, p.z);
-                    glVertex3f(endX, endY, endZ);
-                }
-            }
-        }
-        glEnd();
-    }
-
-    // 只对少数水花添加短线效果
-    glLineWidth(0.5f);
-    glBegin(GL_LINES);
+    // 3. 绘制水花（点）
+    glPointSize(2.0f);
+    glBegin(GL_POINTS);
     for (const auto& p : particles) {
         if (!p.active || p.type != 1) continue;
-
-        if (p.size > 2.2f && p.life > 0.3f) {
-            float alpha = p.life * 0.3f;
-            glColor4f(0.85f, 0.9f, 1.0f, alpha);
-
-            float angle = static_cast<float>(rand() % 360) * 3.14159f / 180.0f;
-            float length = p.size * 1.5f;
-
-            float endX = p.x + cos(angle) * length;
-            float endY = p.y + sin(angle) * length * 0.3f;
-            float endZ = p.z + sin(angle) * length;
-
-            glVertex3f(p.x, p.y, p.z);
-            glVertex3f(endX, endY, endZ);
-        }
+        glColor4f(0.8f, 0.9f, 1.0f, 0.5f);
+        glVertex3f(p.x, p.y, p.z);
     }
     glEnd();
 
-    // 恢复状态
-    glDepthMask(GL_TRUE);
-    glDisable(GL_BLEND);
-    glEnable(GL_LIGHTING);
-    glEnable(GL_TEXTURE_2D);
-
-    // 恢复矩阵
-    glPopMatrix();
-}
-
-// 绘制积雪效果
-void WeatherSystem::renderSnowAccumulation() {
-    if (snowAccumulation <= 0.0f) {
-        return;
+    //如果正在下雪，绘制房子上的积雪
+    if (isSnowing) {
+        drawSnowOnHouse();
     }
 
-    // 保存当前矩阵状态
-    glPushMatrix();
-
-    glDisable(GL_LIGHTING);
-    glDisable(GL_TEXTURE_2D);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    // 绘制森林地面的积雪
-    glColor4f(0.95f, 0.95f, 1.0f, 0.9f);
-    GenerateCuboid(0, 10, 0, 800, 3, 800);
-    RenderCuboid();
-
-    // 绘制房屋屋顶的积雪（三角形屋顶）
-    glColor4f(0.98f, 0.98f, 1.0f, 0.95f);
-    // 屋顶左侧
-    GenerateParallelogramPrism(400, 185, 400, 180, 310, 95, 310, 90, 95, 180);
-    RenderParallelogramPrism();
-    // 屋顶右侧
-    GenerateParallelogramPrism(400, 185, 400, 180, 490, 95, 490, 90, 95, 180);
-    RenderParallelogramPrism();
-
-    // 绘制烟囱顶部的积雪
-    glColor4f(1.0f, 1.0f, 1.0f, 0.9f);
-    // 烟囱顶部
-    GenerateCuboid(355, 145, 165, -30, 5, 30);
-    RenderCuboid();
-    
-    //绘制棚子上的积雪
-    GenerateParallelogramPrism(400, 95, 400, 100, 370, 65, 370, 70, 270, 70);
-    RenderParallelogramPrism();
-    GenerateParallelogramPrism(400, 95, 400, 100, 430, 65, 430, 70, 270, 70);
-    RenderParallelogramPrism();
-
-    // 恢复状态
-    glDisable(GL_BLEND);
     glEnable(GL_LIGHTING);
     glEnable(GL_TEXTURE_2D);
-
-    // 恢复矩阵
-    glPopMatrix();
+    glPointSize(1.0f);
 }
 
-// 设置天气状态
-void WeatherSystem::setWeather(WeatherState state) {
-    // 如果切换天气状态，清理之前的粒子
-    if (state != currentWeather) {
-        if (currentWeather == WEATHER_SNOWING && state != WEATHER_SNOWING) {
-            clearSnow(); // 从下雪切换到其他天气时清除积雪
-        }
-        if (currentWeather == WEATHER_RAINING && state == WEATHER_SNOWING) {
-            clear(); // 从下雨切换到下雪，清除所有粒子
-        }
-        
-        currentWeather = state;
-        
-        std::cout << "Weather changed to: ";
-        switch (currentWeather) {
-            case WEATHER_SUNNY:
-                std::cout << "SUNNY";
-                break;
-            case WEATHER_RAINING:
-                std::cout << "RAINING";
-                break;
-            case WEATHER_SNOWING:
-                std::cout << "SNOWING";
-                break;
-        }
-        std::cout << std::endl;
+void WeatherSystem::toggleRain() {
+    isRaining = !isRaining;
+    if (isRaining) {
+        isSnowing = false;
+        clear();
     }
 }
 
-// 获取当前天气状态
-WeatherState WeatherSystem::getWeather() const{
-    return currentWeather;
+void WeatherSystem::toggleSnow() {
+    isSnowing = !isSnowing;
+    if (isSnowing) {
+        isRaining = false;
+        clear();
+    }
 }
 
-// 清除所有粒子
 void WeatherSystem::clear() {
     particles.clear();
 }
 
-// 清除积雪
 void WeatherSystem::clearSnow() {
     snowAccumulation = 0.0f;
+}
+
+void WeatherSystem::renderSnowAccumulation() {
+    if (snowAccumulation <= 0.0f) return;
+
+    glPushMatrix();
+
+    // 启用光照和混合
+    glEnable(GL_LIGHTING);
+    glDisable(GL_TEXTURE_2D);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // 获取当前光照条件
+    bool isDay = lightingSystem.isDaytime();
+
+    //直接从lightingSystem获取环境光
+    const GLfloat* currentAmbient = lightingSystem.getGlobalAmbient();
+
+    // 计算积雪颜色，基于环境光
+    float baseBrightness = (currentAmbient[0] + currentAmbient[1] + currentAmbient[2]) / 3.0f;
+    float brightnessFactor = std::max(0.2f, baseBrightness); // 确保最低亮度
+
+    // 根据当前光照条件设置积雪材质
+    GLfloat mat_ambient[4], mat_diffuse[4], mat_specular[4];
+    GLfloat shininess;
+
+    if (isDay) {
+        // 白天：明亮的积雪
+        mat_ambient[0] = 0.8f * brightnessFactor;
+        mat_ambient[1] = 0.85f * brightnessFactor;
+        mat_ambient[2] = 0.9f * brightnessFactor;
+        mat_ambient[3] = 1.0f;
+
+        mat_diffuse[0] = 1.0f * brightnessFactor;
+        mat_diffuse[1] = 1.0f * brightnessFactor;
+        mat_diffuse[2] = 1.0f * brightnessFactor;
+        mat_diffuse[3] = 1.0f;
+
+        mat_specular[0] = 0.8f;
+        mat_specular[1] = 0.8f;
+        mat_specular[2] = 0.9f;
+        mat_specular[3] = 1.0f;
+
+        shininess = 100.0f;
+    }
+    else {
+        // 夜晚：暗淡偏蓝的积雪
+        float nightFactor = 0.3f + 0.7f * brightnessFactor; // 基于环境光调整
+
+        mat_ambient[0] = 0.4f * nightFactor;
+        mat_ambient[1] = 0.5f * nightFactor;
+        mat_ambient[2] = 0.6f * nightFactor;
+        mat_ambient[3] = 1.0f;
+
+        mat_diffuse[0] = 0.6f * nightFactor;
+        mat_diffuse[1] = 0.7f * nightFactor;
+        mat_diffuse[2] = 0.8f * nightFactor;
+        mat_diffuse[3] = 1.0f;
+
+        mat_specular[0] = 0.3f * nightFactor;
+        mat_specular[1] = 0.3f * nightFactor;
+        mat_specular[2] = 0.4f * nightFactor;
+        mat_specular[3] = 1.0f;
+
+        shininess = 30.0f;
+    }
+
+    // 设置材质
+    glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+    glMaterialf(GL_FRONT, GL_SHININESS, shininess);
+
+    // 计算积雪透明度
+    float alpha = snowAccumulation / 8.0f;
+    if (alpha > 0.95f) alpha = 0.95f;
+
+    // 设置颜色（Alpha通道控制透明度，RGB由材质和光照决定）
+    glColor4f(1.0f, 1.0f, 1.0f, alpha);
+
+    // 获取房子位置并设置
+    float houseY = terrainSystem.getHeight(0, 0);
+    glTranslatef(0, houseY, -120.0f);
+
+    glPushMatrix();
+    glTranslatef(0.0f, 0.2f, 0.0f);
+
+    // 绘制积雪几何体
+    cons3(350, 220, 350, 230, 260, 130, 260, 140, -65, 180);
+    build3();
+    cons3(350, 220, 350, 230, 440, 130, 440, 140, -65, 180);
+    build3();
+    cons1(305, 185, 5, -30, 5, 30);
+    build();
+    cons3(350, 135, 350, 140, 320, 110, 320, 105, 110, 70);
+    build3();
+    cons3(350, 135, 350, 140, 380, 110, 380, 105, 110, 70);
+    build3();
+
+    glPopMatrix();
+
+    // 恢复状态
+    glDisable(GL_BLEND);
+    glEnable(GL_TEXTURE_2D);
+    glPopMatrix();
+
+    // 恢复默认材质（防止影响其他物体）
+    GLfloat default_ambient[] = { 0.2f, 0.2f, 0.2f, 1.0f };
+    GLfloat default_diffuse[] = { 0.8f, 0.8f, 0.8f, 1.0f };
+    GLfloat default_specular[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+    glMaterialfv(GL_FRONT, GL_AMBIENT, default_ambient);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, default_diffuse);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, default_specular);
+    glMaterialf(GL_FRONT, GL_SHININESS, 0.0f);
 }
