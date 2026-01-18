@@ -1,23 +1,16 @@
-#include "house.h"
 #include "headers.h"
+#include "house.h"
 #include "geometry.h"
 #include "texture.h"
+#include "weather.h"
+#include "lighting.h" 
+#include <iostream>
 
 void drawHouse() {
-    // 绘制土地地基
-    glPushMatrix();
-    applyDirtTexture();
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-    glMatrixMode(GL_TEXTURE);
-    glLoadIdentity();
-    glScalef(40, 40, 1.0);
-    glMatrixMode(GL_MODELVIEW);
-    GenerateCuboid(-1, -10, -1, 802, 19, 802);
-    RenderCuboid();
-    disableTexture();
-    glPopMatrix();
+    glDisable(GL_CULL_FACE);
+    GLfloat mat_specular[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+    glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
 
-    // 房子四面墙壁
     glPushMatrix();
     applyWoodTexture();
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
@@ -26,64 +19,65 @@ void drawHouse() {
     glScalef(10, 10, 1.0);
     glMatrixMode(GL_MODELVIEW);
 
-    // 房子后墙
-    GenerateTrapezoidalPrism(320, 10, 100, 80, 160, 10);
+    // 后墙 (x-50, z-60)
+    GenerateTrapezoidalPrism(270, 50, -60, 80, 160, 10);
     RenderTrapezoidalPrism();
-    GenerateTrapezoidalPrism(480, 10, 100, -80, 160, 10);
+    GenerateTrapezoidalPrism(430, 50, -60, -80, 160, 10);
     RenderTrapezoidalPrism();
 
-    // 房子前墙
-    GenerateTriangularPrism(320, 90, 385, 90, 385, 155, 260, 10);
+    // 前墙 (x-50, z-60)
+    GenerateTriangularPrism(270, 130, 335, 130, 335, 195, 100, 10);
     RenderTriangularPrism();
-    GenerateTriangularPrism(480, 90, 415, 90, 415, 155, 260, 10);
+    GenerateTriangularPrism(430, 130, 365, 130, 365, 195, 100, 10);
     RenderTriangularPrism();
-    GenerateTriangularPrism(385, 155, 415, 155, 400, 170, 260, 10);
+    GenerateTriangularPrism(335, 195, 365, 195, 350, 210, 100, 10);
     RenderTriangularPrism();
-    GenerateCuboid(385, 90, 260, 30, 10, 10);
+
+    GenerateCuboid(335, 130, 100, 30, 10, 10);
     RenderCuboid();
-    GenerateCuboid(385, 130, 260, 30, 25, 10);
+    GenerateCuboid(335, 170, 100, 30, 25, 10);
     RenderCuboid();
-    GenerateCuboid(320, 10, 260, 20, 80, 10);
+    GenerateCuboid(270, 50, 100, 20, 80, 10);
     RenderCuboid();
-    GenerateCuboid(460, 10, 260, 20, 80, 10);
+    GenerateCuboid(410, 50, 100, 20, 80, 10);
     RenderCuboid();
-    GenerateCuboid(340, 10, 260, 30, 40, 10);
+    GenerateCuboid(290, 50, 100, 30, 40, 10);
     RenderCuboid();
-    GenerateCuboid(430, 10, 260, 35, 40, 10);
+    GenerateCuboid(380, 50, 100, 35, 40, 10);
     RenderCuboid();
-    GenerateCuboid(370, 10, 260, 15, 70, 10);
+    GenerateCuboid(320, 50, 100, 15, 70, 10);
     RenderCuboid();
-    GenerateCuboid(415, 10, 260, 15, 70, 10);
+    GenerateCuboid(365, 50, 100, 15, 70, 10);
     RenderCuboid();
-    GenerateCuboid(340, 80, 260, 140, 10, 10);
+    GenerateCuboid(290, 120, 100, 140, 10, 10);
     RenderCuboid();
-    GenerateCuboid(385, 70, 260, 30, 10, 10);
+    GenerateCuboid(335, 110, 100, 30, 10, 10);
     RenderCuboid();
 
-    // 房子左墙
-    GenerateTrapezoidalPrism(320, 80, 100, 10, 20, 160);
+    // 左墙 (x-50, z-60)
+    GenerateTrapezoidalPrism(270, 120, -60, 10, 20, 160);
     RenderTrapezoidalPrism();
-    GenerateCuboid(320, 10, 100, 10, 70, 70);
+    GenerateCuboid(270, 50, -60, 10, 70, 70);
     RenderCuboid();
-    GenerateCuboid(320, 10, 200, 10, 70, 60);
+    GenerateCuboid(270, 50, 40, 10, 70, 60);
     RenderCuboid();
-    GenerateCuboid(320, 10, 170, 10, 40, 30);
+    GenerateCuboid(270, 50, 10, 10, 40, 30);
     RenderCuboid();
 
-    // 房子右墙
-    GenerateTrapezoidalPrism(480, 80, 110, -10, 20, 150);
+    // 右墙 (x-50, z-60)
+    GenerateTrapezoidalPrism(430, 120, -50, -10, 20, 150);
     RenderTrapezoidalPrism();
-    GenerateCuboid(480, 10, 110, -10, 70, 60);
+    GenerateCuboid(430, 50, -50, -10, 70, 60);
     RenderCuboid();
-    GenerateCuboid(480, 10, 200, -10, 70, 60);
+    GenerateCuboid(430, 50, 40, -10, 70, 60);
     RenderCuboid();
-    GenerateCuboid(480, 10, 170, -10, 40, 30);
+    GenerateCuboid(430, 50, 10, -10, 40, 30);
     RenderCuboid();
 
     disableTexture();
     glPopMatrix();
 
-    // 绘制房顶
+    // 房顶 (x-50, z-60)
     glPushMatrix();
     applyBrickTexture();
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
@@ -91,18 +85,19 @@ void drawHouse() {
     glLoadIdentity();
     glScalef(10, 10, 1.0);
     glMatrixMode(GL_MODELVIEW);
-    GenerateParallelogramPrism(400, 170, 400, 180, 310, 80, 310, 90, 95, 180);
+
+    GenerateParallelogramPrism(350, 210, 350, 220, 260, 120, 260, 130, -65, 180);
     RenderParallelogramPrism();
-    GenerateParallelogramPrism(400, 170, 400, 180, 490, 80, 490, 90, 95, 180);
+    GenerateParallelogramPrism(350, 210, 350, 220, 440, 120, 440, 130, -65, 180);
     RenderParallelogramPrism();
 
-    // 绘制烟囱
-    GenerateTrapezoidalPrism(350, 140, 170, -20, -40, 20);
+    // 烟囱 (x-50, z-60)
+    GenerateTrapezoidalPrism(300, 180, 10, -20, -40, 20);
     RenderTrapezoidalPrism();
     disableTexture();
     glPopMatrix();
 
-    // 绘制大门
+    // 大门 (x-50, z-60)
     glPushMatrix();
     applyDarkWoodTexture();
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
@@ -110,24 +105,25 @@ void drawHouse() {
     glLoadIdentity();
     glScalef(10, 10, 1.0);
     glMatrixMode(GL_MODELVIEW);
-    GenerateCuboid(385, 20, 260, 30, 50, 5);
+
+    GenerateCuboid(335, 60, 100, 30, 50, 5);
     RenderCuboid();
     disableTexture();
 
-    // 绘制门上的装饰
+    // 门装饰 (x-50, z-60)
     glColor3f(GRAY);
-    GenerateCuboid(390, 25, 265, 20, 2, 0.5);
+    GenerateCuboid(340, 65, 105, 20, 2, 0.5);
     RenderCuboid();
-    GenerateCuboid(390, 65, 265, 20, -2, 0.5);
+    GenerateCuboid(340, 105, 105, 20, -2, 0.5);
     RenderCuboid();
-    GenerateCuboid(390, 44, 265, 20, 2, 0.5);
+    GenerateCuboid(340, 84, 105, 20, 2, 0.5);
     RenderCuboid();
-    GenerateCuboid(390, 25, 265, 2, 40, 0.5);
+    GenerateCuboid(340, 65, 105, 2, 40, 0.5);
     RenderCuboid();
-    GenerateCuboid(408, 25, 265, 2, 40, 0.5);
+    GenerateCuboid(358, 65, 105, 2, 40, 0.5);
     RenderCuboid();
 
-    // 绘制门前的棚子
+    // 棚子 (x-50, z-60)
     glPushMatrix();
     applyBrickTexture();
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
@@ -135,13 +131,15 @@ void drawHouse() {
     glLoadIdentity();
     glScalef(10, 10, 1.0);
     glMatrixMode(GL_MODELVIEW);
-    GenerateParallelogramPrism(400, 95, 400, 85, 370, 65, 370, 55, 270, 70);
+
+    GenerateParallelogramPrism(350, 135, 350, 125, 320, 105, 320, 95, 110, 70);
     RenderParallelogramPrism();
-    GenerateParallelogramPrism(400, 95, 400, 85, 430, 65, 430, 55, 270, 70);
+    GenerateParallelogramPrism(350, 135, 350, 125, 380, 105, 380, 95, 110, 70);
     RenderParallelogramPrism();
-    GenerateCuboid(375, 10, 330, 4, 57, 4);
+
+    GenerateCuboid(325, 50, 170, 4, 57, 4);
     RenderCuboid();
-    GenerateCuboid(425, 10, 330, -4, 57, 4);
+    GenerateCuboid(375, 50, 170, -4, 57, 4);
     RenderCuboid();
     disableTexture();
     glPopMatrix();
@@ -153,67 +151,69 @@ void drawHouse() {
     glScalef(10, 10, 1.0);
     glMatrixMode(GL_MODELVIEW);
 
-    // 绘制入门走道
-    GenerateCuboid(385, 10, 260, 30, 10, 60);
+    // 走道 (x-50, z-60)
+    GenerateCuboid(335, 50, 100, 30, 10, 60);
     RenderCuboid();
-    GenerateCuboid(375, 10, 270, 10, 10, 50);
+    GenerateCuboid(325, 50, 110, 10, 10, 50);
     RenderCuboid();
-    GenerateCuboid(415, 10, 270, 10, 10, 50);
+    GenerateCuboid(365, 50, 110, 10, 10, 50);
+    RenderCuboid();
+    GenerateCuboid(325, 40, 110, 50, 10, 80);
     RenderCuboid();
 
-    // 绘制左边的围栏
+    // 左边围栏 (x-50, z-60)
     for (int i = 0; i < 6; i++) {
-        GenerateCuboid(378, 20, 270 + i * 10, 4, 30, 4);
+        GenerateCuboid(328, 60, 110 + i * 10, 4, 30, 4);
         RenderCuboid();
     }
-    GenerateCuboid(378, 50, 270, 4, 4, 58);
+    GenerateCuboid(328, 90, 110, 4, 4, 58);
     RenderCuboid();
 
-    // 绘制右边围栏
+    // 右边围栏 (x-50, z-60)
     for (int i = 0; i < 6; i++) {
-        GenerateCuboid(418, 20, 270 + i * 10, 4, 30, 4);
+        GenerateCuboid(368, 60, 110 + i * 10, 4, 30, 4);
         RenderCuboid();
     }
-    GenerateCuboid(418, 50, 270, 4, 4, 58);
+    GenerateCuboid(368, 90, 110, 4, 4, 58);
     RenderCuboid();
 
-    // 绘制台阶
-    GenerateCuboid(375, 10, 320, 50, 10, 10);
+    // 台阶 (x-50, z-60)
+    GenerateCuboid(325, 50, 160, 50, 10, 10);
     RenderCuboid();
-    GenerateCuboid(385, 10, 330, 30, 5, 10);
-    RenderCuboid();
-
-    // 绘制房子地板
-    GenerateCuboid(325, 10, 105, 150, 10, 150);
+    GenerateCuboid(335, 50, 170, 30, 5, 10);
     RenderCuboid();
 
-    // 绘制外围边缘
-    GenerateCuboid(315, 10, 95, 170, 10, 5);
-    RenderCuboid();
-    GenerateCuboid(315, 10, 100, 5, 10, 175);
-    RenderCuboid();
-    GenerateCuboid(485, 10, 100, -5, 10, 175);
-    RenderCuboid();
-    GenerateCuboid(320, 10, 270, 65, 10, 5);
-    RenderCuboid();
-    GenerateCuboid(480, 10, 270, -65, 10, 5);
+    // 地板 (x-50, z-60)
+    GenerateCuboid(275, 50, -55, 150, 10, 150);
     RenderCuboid();
 
-    // 绘制烟囱顶部边缘
-    GenerateCuboid(355, 145, 165, -30, -10, 5);
+    // 外围边缘 (x-50, z-60)
+    GenerateCuboid(265, 40, -65, 170, 23, 5);
     RenderCuboid();
-    GenerateCuboid(355, 145, 190, -30, -10, 5);
+    GenerateCuboid(265, 40, -60, 5, 23, 175);
     RenderCuboid();
-    GenerateCuboid(355, 145, 170, -5, -10, 20);
+    GenerateCuboid(435, 40, -60, -5, 23, 175);
     RenderCuboid();
-    GenerateCuboid(330, 145, 170, -5, -10, 20);
+    GenerateCuboid(270, 40, 110, 65, 23, 5);
+    RenderCuboid();
+    GenerateCuboid(430, 40, 110, -65, 23, 5);
+    RenderCuboid();
+
+    // 烟囱顶部边缘 (x-50, z-60)
+    GenerateCuboid(305, 185, 5, -30, -10, 5);
+    RenderCuboid();
+    GenerateCuboid(305, 185, 30, -30, -10, 5);
+    RenderCuboid();
+    GenerateCuboid(305, 185, 10, -5, -10, 20);
+    RenderCuboid();
+    GenerateCuboid(280, 185, 10, -5, -10, 20);
     RenderCuboid();
 
     disableTexture();
     glPopMatrix();
 
-    // 绘制房子内部装饰
-    // 绘制床铺床板
+    // 内部装饰 (x-50, z-60)
+    // 床铺床板
     glPushMatrix();
     applyWoodTexture();
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
@@ -221,30 +221,30 @@ void drawHouse() {
     glLoadIdentity();
     glScalef(40, 40, 1.0);
     glMatrixMode(GL_MODELVIEW);
-    GenerateCuboid(330, 20, 110, 30, 20, 3);
+
+    GenerateCuboid(280, 60, -50, 30, 20, 3);
     RenderCuboid();
-    GenerateCuboid(330, 20, 113, 30, 10, 60);
+    GenerateCuboid(280, 60, -47, 30, 10, 60);
     RenderCuboid();
     disableTexture();
     glPopMatrix();
 
-    // 绘制被子
+    // 被子
     glColor3f(WHITE);
-    GenerateCuboid(330, 30, 113, 30, 10, 15);
+    GenerateCuboid(280, 70, -47, 30, 10, 15);
     RenderCuboid();
     glColor3f(RED);
-    GenerateCuboid(330, 30, 128, 30, 10, 45);
+    GenerateCuboid(280, 70, -32, 30, 10, 45);
     RenderCuboid();
 
-    // 绘制沙发
-    // 绘制垫子
+    // 沙发垫子
     glColor3f(WHITE);
-    GenerateCuboid(470, 30, 150, -30, 10, 60);
+    GenerateCuboid(420, 70, -10, -30, 10, 60);
     RenderCuboid();
-    GenerateCuboid(470, 40, 150, -5, 12, 60);
+    GenerateCuboid(420, 80, -10, -5, 12, 60);
     RenderCuboid();
 
-    // 绘制木制底座
+    // 沙发底座
     glPushMatrix();
     applyWoodTexture();
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
@@ -252,36 +252,38 @@ void drawHouse() {
     glLoadIdentity();
     glScalef(40, 40, 1.0);
     glMatrixMode(GL_MODELVIEW);
-    GenerateCuboid(470, 20, 140, -30, 30, 10);
+
+    GenerateCuboid(420, 60, -20, -30, 30, 10);
     RenderCuboid();
-    GenerateCuboid(470, 20, 210, -30, 30, 10);
+    GenerateCuboid(420, 60, 50, -30, 30, 10);
     RenderCuboid();
-    GenerateCuboid(470, 20, 140, -30, 10, 80);
+    GenerateCuboid(420, 60, -20, -30, 10, 80);
     RenderCuboid();
     disableTexture();
     glPopMatrix();
 
-    // 绘制架子
+    // 架子
     glPushMatrix();
     applyDarkWoodTexture();
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     glMatrixMode(GL_TEXTURE);
     glLoadIdentity();
     glScalef(10, 10, 1.0);
-    GenerateCuboid(470, 20, 220, -30, 2, 40);
+
+    GenerateCuboid(420, 60, 60, -30, 2, 40);
     RenderCuboid();
-    GenerateCuboid(470, 40, 220, -30, 2, 40);
+    GenerateCuboid(420, 80, 60, -30, 2, 40);
     RenderCuboid();
-    GenerateCuboid(470, 60, 220, -30, 2, 40);
+    GenerateCuboid(420, 100, 60, -30, 2, 40);
     RenderCuboid();
-    GenerateCuboid(470, 20, 220, -30, 42, 2);
+    GenerateCuboid(420, 60, 60, -30, 42, 2);
     RenderCuboid();
-    GenerateCuboid(470, 20, 258, -30, 42, 2);
+    GenerateCuboid(420, 60, 98, -30, 42, 2);
     RenderCuboid();
     disableTexture();
     glPopMatrix();
 
-    // 绘制地毯
+    // 地毯
     glPushMatrix();
     applyCarpetTexture();
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
@@ -289,88 +291,109 @@ void drawHouse() {
     glLoadIdentity();
     glScalef(10, 10, 1.0);
     glMatrixMode(GL_MODELVIEW);
-    GenerateCuboid(340, 20, 120, 130, 1, 130);
+
+    GenerateCuboid(290, 60, -40, 130, 1, 130);
     RenderCuboid();
     disableTexture();
     glPopMatrix();
 
-    // 绘制窗户玻璃
-    glColor4f(WHITE, 0.2);
-    // 正面窗户1
-    GenerateCuboid(320, 50, 170, 10, 30, 30);
-    RenderCuboid();
-    // 正面窗户2
-    GenerateCuboid(480, 50, 170, -10, 30, 30);
-    RenderCuboid();
-    // 正面窗户3
-    GenerateCuboid(385, 100, 260, 30, 30, 10);
-    RenderCuboid();
-    // 左面窗户
-    GenerateCuboid(340, 50, 260, 30, 30, 10);
-    RenderCuboid();
-    // 右面窗户
-    GenerateCuboid(430, 50, 260, 30, 30, 10);
-    RenderCuboid();
-
-    // 绘制窗户边框
+    // 窗户边框 (x-50, z-60)
     glColor3f(BROWN);
-    // 正面窗户边框1
-    GenerateCuboid(380, 95, 270, 40, 5, 1);
+    // 正面窗户1
+    GenerateCuboid(330, 135, 110, 40, 5, 1);
     RenderCuboid();
-    GenerateCuboid(380, 130, 270, 40, 5, 1);
+    GenerateCuboid(330, 170, 110, 40, 5, 1);
     RenderCuboid();
-    GenerateCuboid(380, 100, 270, 5, 30, 1);
+    GenerateCuboid(330, 140, 110, 5, 30, 1);
     RenderCuboid();
-    GenerateCuboid(415, 100, 270, 5, 30, 1);
+    GenerateCuboid(365, 140, 110, 5, 30, 1);
     RenderCuboid();
-    GenerateCuboid(399, 100, 270, 2, 30, 1);
-    RenderCuboid();
-
-    // 正面窗户边框2
-    GenerateCuboid(335, 45, 270, 40, 5, 1);
-    RenderCuboid();
-    GenerateCuboid(335, 80, 270, 40, 5, 1);
-    RenderCuboid();
-    GenerateCuboid(335, 50, 270, 5, 30, 1);
-    RenderCuboid();
-    GenerateCuboid(370, 50, 270, 5, 30, 1);
-    RenderCuboid();
-    GenerateCuboid(354, 50, 270, 2, 30, 1);
+    GenerateCuboid(349, 140, 110, 2, 30, 1);
     RenderCuboid();
 
-    // 正面窗户边框3
-    GenerateCuboid(425, 45, 270, 40, 5, 1);
+    // 正面窗户2
+    GenerateCuboid(285, 85, 110, 40, 5, 1);
     RenderCuboid();
-    GenerateCuboid(425, 80, 270, 40, 5, 1);
+    GenerateCuboid(285, 120, 110, 40, 5, 1);
     RenderCuboid();
-    GenerateCuboid(425, 50, 270, 5, 30, 1);
+    GenerateCuboid(285, 90, 110, 5, 30, 1);
     RenderCuboid();
-    GenerateCuboid(460, 50, 270, 5, 30, 1);
+    GenerateCuboid(320, 90, 110, 5, 30, 1);
     RenderCuboid();
-    GenerateCuboid(444, 50, 270, 2, 30, 1);
-    RenderCuboid();
-
-    // 左面窗户边框
-    GenerateCuboid(320, 45, 165, -1, 5, 40);
-    RenderCuboid();
-    GenerateCuboid(320, 85, 165, -1, -5, 40);
-    RenderCuboid();
-    GenerateCuboid(320, 50, 170, -1, 30, -5);
-    RenderCuboid();
-    GenerateCuboid(320, 50, 205, -1, 30, -5);
-    RenderCuboid();
-    GenerateCuboid(320, 50, 184, -1, 30, 2);
+    GenerateCuboid(304, 90, 110, 2, 30, 1);
     RenderCuboid();
 
-    // 右面窗户边框
-    GenerateCuboid(481, 45, 165, -1, 5, 40);
+    // 正面窗户3
+    GenerateCuboid(375, 85, 110, 40, 5, 1);
     RenderCuboid();
-    GenerateCuboid(481, 85, 165, -1, -5, 40);
+    GenerateCuboid(375, 120, 110, 40, 5, 1);
     RenderCuboid();
-    GenerateCuboid(481, 50, 170, -1, 30, -5);
+    GenerateCuboid(375, 90, 110, 5, 30, 1);
     RenderCuboid();
-    GenerateCuboid(481, 50, 205, -1, 30, -5);
+    GenerateCuboid(410, 90, 110, 5, 30, 1);
     RenderCuboid();
-    GenerateCuboid(481, 50, 184, -1, 30, 2);
+    GenerateCuboid(394, 90, 110, 2, 30, 1);
     RenderCuboid();
+
+    // 左面窗户
+    GenerateCuboid(270, 85, 5, -1, 5, 40);
+    RenderCuboid();
+    GenerateCuboid(270, 125, 5, -1, -5, 40);
+    RenderCuboid();
+    GenerateCuboid(270, 90, 10, -1, 30, -5);
+    RenderCuboid();
+    GenerateCuboid(270, 90, 45, -1, 30, -5);
+    RenderCuboid();
+    GenerateCuboid(270, 90, 24, -1, 30, 2);
+    RenderCuboid();
+
+    // 右面窗户
+    GenerateCuboid(431, 85, 5, -1, 5, 40);
+    RenderCuboid();
+    GenerateCuboid(431, 125, 5, -1, -5, 40);
+    RenderCuboid();
+    GenerateCuboid(431, 90, 10, -1, 30, -5);
+    RenderCuboid();
+    GenerateCuboid(431, 90, 45, -1, 30, -5);
+    RenderCuboid();
+    GenerateCuboid(431, 90, 24, -1, 30, 2);
+    RenderCuboid();
+
+    // 半透明窗户玻璃 (x-50, z-60)
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDepthMask(GL_FALSE);
+    bool isNight = !lightingSystem.isDaytime();
+
+    if (isNight) {
+        GLfloat emission[] = { 0.9f, 0.7f, 0.1f, 1.0f };
+        glMaterialfv(GL_FRONT, GL_EMISSION, emission);
+        glColor4f(1.0f, 0.9f, 0.3f, 0.6f);
+    }
+    else {
+        GLfloat no_emission[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+        glMaterialfv(GL_FRONT, GL_EMISSION, no_emission);
+        glColor4f(0.8f, 0.9f, 1.0f, 0.3f);
+    }
+
+    // 左面窗户玻璃
+    GenerateCuboid(270, 90, 10, 1, 30, 30);
+    RenderCuboid();
+    // 右面窗户玻璃
+    GenerateCuboid(430, 90, 10, -1, 30, 30);
+    RenderCuboid();
+    // 正面窗户1玻璃
+    GenerateCuboid(335, 140, 110, 30, 30, 1);
+    RenderCuboid();
+    // 正面窗户2玻璃
+    GenerateCuboid(290, 90, 110, 30, 30, 1);
+    RenderCuboid();
+    // 正面窗户3玻璃
+    GenerateCuboid(380, 90, 110, 30, 30, 1);
+    RenderCuboid();
+
+    GLfloat no_emission[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+    glMaterialfv(GL_FRONT, GL_EMISSION, no_emission);
+    glDepthMask(GL_TRUE);
+    glDisable(GL_BLEND);
 }
