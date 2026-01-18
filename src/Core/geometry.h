@@ -13,8 +13,7 @@ public:
     enum Type {
         SPHERE,                 // 球体
         CUBOID,                 // 长方体（直棱柱）
-        TRAPEZOIDALPRISM,       // 梯形棱柱
-        PARALLELOGRAMPRISM,     // 平行四边形棱柱
+        TETRAHEDRON,            // 四棱柱
         UNKNOWN                 // 其他未知几何体
     };
 

@@ -5,9 +5,9 @@
 
 class Cuboid : public Geometry {
 public:
-    Cuboid(float width = 1.0f, float height = 1.0f, float depth = 1.0f)
-        : Geometry(CUBOID), width_(width), height_(height), depth_(depth) {
-        generateGeometry();
+    Cuboid(float width = 1.0f, float height = 1.0f, float depth = 1.0f): Geometry(CUBOID)
+    {
+        setSize(width, height, depth);
     }
     
     // 获取长宽高的公共接口
